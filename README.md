@@ -1,7 +1,7 @@
 # Raycast Scripts Conventions
 
 ## Location
-All Raycast scripts should be saved to: `/Users/assistant2/raycast scripts`
+All Raycast scripts should be saved to: `~/raycast scripts`
 
 ## Output Policy
 Scripts should default to **silent mode** unless the output is important enough to display in the Raycast UI.

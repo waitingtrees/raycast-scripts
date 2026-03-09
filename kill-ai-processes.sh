@@ -19,7 +19,7 @@ current_claude_pids=$(ps -eo pid,tty,comm | grep claude | grep -v '??' | grep -v
 
 # Count before
 opencode_count=$(ps aux | grep -i opencode | grep -v grep | wc -l | tr -d ' ')
-claude_orphan_count=$(ps -eo pid,tty,args | grep '/Users/assistant2/.local/bin/claude' | grep '??' | grep -v grep | wc -l | tr -d ' ')
+claude_orphan_count=$(ps -eo pid,tty,args | grep '$HOME/.local/bin/claude' | grep '??' | grep -v grep | wc -l | tr -d ' ')
 total=$((opencode_count + claude_orphan_count))
 
 if [ "$total" -eq 0 ]; then
@@ -35,7 +35,7 @@ fi
 # Kill orphaned claude processes (those with '??' TTY = no terminal)
 # This preserves any claude running in an active terminal session
 if [ "$claude_orphan_count" -gt 0 ]; then
-  ps -eo pid,tty,args | grep '/Users/assistant2/.local/bin/claude' | grep '??' | grep -v grep | awk '{print $1}' | xargs kill 2>/dev/null
+  ps -eo pid,tty,args | grep '$HOME/.local/bin/claude' | grep '??' | grep -v grep | awk '{print $1}' | xargs kill 2>/dev/null
 fi
 
 echo "🧹 Killed $total orphaned AI processes ($claude_orphan_count claude, $opencode_count opencode)"

@@ -13,8 +13,8 @@
 # @raycast.description Transcribe audio OR compare existing transcript against script document
 # @raycast.author assistant2
 
-WHISPER_PATH="/Users/assistant2/Library/Python/3.10/bin/whisper"
-COMPARE_SCRIPT="/Users/assistant2/.config/claude-code/helpers/compare_script_transcript.py"
+WHISPER_PATH="$HOME/Library/Python/3.10/bin/whisper"
+COMPARE_SCRIPT="$HOME/.config/claude-code/helpers/compare_script_transcript.py"
 
 # Get selected file from Finder
 selected_file=$(osascript -e 'tell application "Finder"

@@ -13,7 +13,7 @@
 # @raycast.description Copies the frontmost Finder file to Frame.io watch folder with auto-versioning
 
 # Set your watch folder path
-WATCH_FOLDER="/Users/assistant2/Frame Watch Folder"
+WATCH_FOLDER="$HOME/Frame Watch Folder"
 VERSIONS_FILE="$WATCH_FOLDER/.versions"
 
 # Create watch folder if it doesn't exist

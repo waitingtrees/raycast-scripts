@@ -102,7 +102,7 @@ def create_bins_now(media_pool, root_folder):
     }
 
 def import_raw_timeline(media_pool, seq_folder):
-    template_path = "/Users/assistant2/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility/raw.drt"
+    template_path = "$HOME/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility/raw.drt"
     if not os.path.exists(template_path):
         print(f"❌ Critical: raw.drt not found at {template_path}")
         return False

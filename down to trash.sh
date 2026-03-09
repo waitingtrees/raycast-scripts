@@ -30,7 +30,7 @@ tell application "Finder"
 
     -- Delete all items from Frame Watch Folder
     try
-        delete every item of (POSIX file "/Users/assistant2/Frame Watch Folder" as alias)
+        delete every item of (POSIX file "$HOME/Frame Watch Folder" as alias)
     end try
 end tell
 EOF

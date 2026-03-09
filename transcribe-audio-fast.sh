@@ -13,7 +13,7 @@
 # @raycast.description Fast transcribe for clean/studio-recorded audio. Uses base model, no preprocessing.
 # @raycast.author assistant2
 
-WHISPER_PATH="/Users/assistant2/Library/Python/3.10/bin/whisper"
+WHISPER_PATH="$HOME/Library/Python/3.10/bin/whisper"
 
 # Get selected files from Finder
 selected_files=$(osascript -e 'tell application "Finder"

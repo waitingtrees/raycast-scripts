@@ -106,7 +106,7 @@ done
 # Kill orphaned AI processes
 current_claude_pids=$(ps -eo pid,tty,comm | grep claude | grep -v '??' | grep -v grep | awk '{print $1}')
 opencode_count=$(ps aux | grep -i opencode | grep -v grep | wc -l | tr -d ' ')
-claude_orphan_count=$(ps -eo pid,tty,args | grep '/Users/assistant2/.local/bin/claude' | grep '??' | grep -v grep | wc -l | tr -d ' ')
+claude_orphan_count=$(ps -eo pid,tty,args | grep '$HOME/.local/bin/claude' | grep '??' | grep -v grep | wc -l | tr -d ' ')
 ai_total=$((opencode_count + claude_orphan_count))
 
 if [ "$ai_total" -gt 0 ]; then
@@ -114,7 +114,7 @@ if [ "$ai_total" -gt 0 ]; then
         ps aux | grep -i opencode | grep -v grep | awk '{print $2}' | xargs kill 2>/dev/null
     fi
     if [ "$claude_orphan_count" -gt 0 ]; then
-        ps -eo pid,tty,args | grep '/Users/assistant2/.local/bin/claude' | grep '??' | grep -v grep | awk '{print $1}' | xargs kill 2>/dev/null
+        ps -eo pid,tty,args | grep '$HOME/.local/bin/claude' | grep '??' | grep -v grep | awk '{print $1}' | xargs kill 2>/dev/null
     fi
     echo "Killed $ai_total orphaned AI processes"
 fi

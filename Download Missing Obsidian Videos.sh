@@ -14,7 +14,7 @@
 # @raycast.author assistant2
 
 CHANNEL_URL="https://www.youtube.com/channel/UC7GZzOWjuG4wMua82uEguXQ"
-DOWNLOAD_DIR="/Users/assistant2/Library/Mobile Documents/com~apple~CloudDocs/SOUND SANCTUARY/The Obsidian Series"
+DOWNLOAD_DIR="$HOME/Library/Mobile Documents/com~apple~CloudDocs/SOUND SANCTUARY/The Obsidian Series"
 
 echo "=== Sound Sanctuary - The Obsidian Series ==="
 echo "Missing Video Downloader"

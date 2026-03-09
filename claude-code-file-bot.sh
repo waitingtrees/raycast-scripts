@@ -38,7 +38,7 @@ while IFS= read -r f; do
 - $f"
 done <<< "$FILE_PATHS"
 
-/Users/assistant2/.local/bin/claude --dangerously-skip-permissions -p "Files:$FILE_LIST
+$HOME/.local/bin/claude --dangerously-skip-permissions -p "Files:$FILE_LIST
 
 $1" &>/dev/null &
 

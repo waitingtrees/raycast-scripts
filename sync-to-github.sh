@@ -9,14 +9,18 @@
 # @raycast.icon 🔄
 
 # Documentation:
-# @raycast.description Syncs raycast scripts to GitHub repository
+# @raycast.description Commits and pushes raycast scripts to GitHub
 # @raycast.author assistant2
 
-# Copy everything from raycast scripts to GitHub scripts folder
-rsync -av --delete --exclude='.DS_Store' "/Users/assistant2/raycast scripts/" "/Users/assistant2/Documents/GitHub/scripts/raycast scripts/"
+cd "$HOME/raycast scripts" || exit 1
 
-# Push to GitHub
-cd /Users/assistant2/Documents/GitHub/scripts
-git add .
-git commit -m "Auto-sync raycast scripts - $(date +%Y-%m-%d\ %H:%M:%S)"
-echo "✅ Committed locally (no push)"
+# Check for changes
+if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+  echo "✅ Already up to date"
+  exit 0
+fi
+
+git add -A
+git commit -m "Sync scripts — $(date +%Y-%m-%d\ %H:%M:%S)"
+git push
+echo "✅ Synced to GitHub"

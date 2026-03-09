@@ -15,7 +15,7 @@
 set -euo pipefail
 
 PYTHON_BIN="$(command -v python3 || true)"
-APP_SCRIPT="/Users/assistant2/PROJECTS/review app/video-review/review_gui.py"
+APP_SCRIPT="$HOME/PROJECTS/review app/video-review/review_gui.py"
 
 if [[ -z "$PYTHON_BIN" ]]; then
   osascript -e 'display notification "python3 not found" with title "Video Review"'
