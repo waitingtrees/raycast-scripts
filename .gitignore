@@ -1,0 +1,16 @@
+# Personal scripts with sensitive info (rates, client data, etc.)
+personal/
+
+# macOS
+.DS_Store
+
+# Secrets
+.env
+
+# Logs
+*.log
+
+# Editor
+*.swp
+*.swo
+*~
