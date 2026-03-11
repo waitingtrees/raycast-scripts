@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raycast Scripts Tier List</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+    background: #0a0a0f;
+    color: #e0e0e0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  header {
+    text-align: center;
+    padding: 2rem 1rem 1rem;
+    background: linear-gradient(180deg, rgba(20,20,35,1) 0%, rgba(10,10,15,1) 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  header p { color: #666; font-size: 0.8rem; margin-top: 0.4rem; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
+
+  .tier-row {
+    display: flex;
+    margin-bottom: 6px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    min-height: 56px;
+  }
+
+  .tier-label {
+    width: 64px;
+    min-width: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.02em;
+    user-select: none;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+
+  .tier-items {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    align-content: flex-start;
+    gap: 5px;
+    padding: 6px 8px;
+    min-height: 48px;
+    transition: background 0.15s;
+  }
+
+  .tier-items.drag-over {
+    background: rgba(255,255,255,0.04);
+  }
+
+  .script-block {
+    padding: 6px 11px;
+    border-radius: 7px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    cursor: grab;
+    user-select: none;
+    white-space: nowrap;
+    transition: transform 0.1s, box-shadow 0.1s;
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+
+  .script-block:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+  .script-block:active { cursor: grabbing; }
+  .script-block.dragging { opacity: 0.4; transform: scale(0.95); }
+  .script-block.selected { outline: 2px solid #a78bfa; outline-offset: 1px; }
+
+  /* Tier colors */
+  .tier-s .tier-label { background: linear-gradient(135deg, #dc2626, #f97316); color: #fff; }
+  .tier-a .tier-label { background: linear-gradient(135deg, #ea580c, #f59e0b); color: #fff; }
+  .tier-b .tier-label { background: linear-gradient(135deg, #ca8a04, #a3e635); color: #1a1a1a; }
+  .tier-c .tier-label { background: linear-gradient(135deg, #16a34a, #22d3ee); color: #fff; }
+  .tier-d .tier-label { background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; }
+
+  /* Script block color schemes by category */
+  .cat-resolve { background: rgba(239,68,68,0.12); color: #fca5a5; }
+  .cat-render { background: rgba(249,115,22,0.12); color: #fdba74; }
+  .cat-audio { background: rgba(168,85,247,0.12); color: #d8b4fe; }
+  .cat-media { background: rgba(59,130,246,0.12); color: #93c5fd; }
+  .cat-image { background: rgba(236,72,153,0.12); color: #f9a8d4; }
+  .cat-file { background: rgba(34,197,94,0.12); color: #86efac; }
+  .cat-system { background: rgba(100,116,139,0.12); color: #cbd5e1; }
+  .cat-ai { background: rgba(99,102,241,0.12); color: #a5b4fc; }
+  .cat-special { background: rgba(20,184,166,0.12); color: #5eead4; }
+  .cat-fusion { background: rgba(244,63,94,0.12); color: #fda4af; }
+
+  /* Info panel */
+  .info-panel {
+    position: fixed;
+    bottom: -100%;
+    left: 0;
+    right: 0;
+    background: #161620;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding: 1.2rem 1.5rem;
+    transition: bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.5);
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  .info-panel.visible { bottom: 0; }
+
+  .info-panel h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    color: #f0f0f0;
+  }
+
+  .info-panel .info-cat {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    background: rgba(167,139,250,0.15);
+    color: #a78bfa;
+  }
+
+  .info-panel p { font-size: 0.82rem; line-height: 1.55; color: #aaa; }
+
+  .info-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255,255,255,0.06);
+    border: none;
+    color: #888;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .info-close:hover { background: rgba(255,255,255,0.1); color: #ccc; }
+
+  /* Drag ghost */
+  .drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 999;
+    padding: 6px 11px;
+    border-radius: 7px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+    transform: translate(-50%, -50%) scale(1.08);
+    opacity: 0.95;
+    display: none;
+  }
+
+  @media (max-width: 700px) {
+    .tier-label { width: 44px; min-width: 44px; font-size: 1rem; }
+    .script-block { font-size: 0.65rem; padding: 5px 8px; }
+    .container { padding: 0.8rem 0.5rem 6rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Raycast Scripts Tier List</h1>
+  <p>Drag to reorder &bull; Tap for details</p>
+</header>
+
+<div class="container" id="tierContainer"></div>
+
+<div class="info-panel" id="infoPanel">
+  <button class="info-close" id="infoClose">&times;</button>
+  <div class="info-cat" id="infoCat"></div>
+  <h3 id="infoTitle"></h3>
+  <p id="infoDesc"></p>
+</div>
+
+<div class="drag-ghost" id="dragGhost"></div>
+
+<script>
+const SCRIPTS = [
+  // Tier S — Core Workflow
+  { id: "create-bins", name: "Create Bins", cat: "resolve", tier: 0, desc: "Creates your full media pool bin structure in DaVinci Resolve instantly — seq, media, footage, audio, gfx. Eliminates the most repetitive manual setup on every single project." },
+  { id: "add-all-render", name: "Add All to Queue & Render", cat: "render", tier: 0, desc: "Grabs all sequences from the seq bin, adds them to the render queue with your TV Export preset, and starts rendering. One hotkey replaces a multi-step render workflow in Resolve." },
+  { id: "render-tv", name: "Render TV Export", cat: "render", tier: 0, desc: "Renders the current timeline using your standard TV delivery preset and reveals the output in media storage. Your bread-and-butter delivery shortcut." },
+  { id: "offload", name: "Offload Media", cat: "file", tier: 0, desc: "Automated multi-card offload from Sony FX6, MixPre, and Track E to their correct project subfolders using rsync. Prevents human error on the most data-critical step of any shoot." },
+  { id: "tag-bins", name: "Tag Bins", cat: "resolve", tier: 0, desc: "Automatically tags all clips in the media pool with keywords matching their parent bin name. Turns tedious organizational work into a one-click operation." },
+  { id: "sort-seq", name: "Sort Seq Bin", cat: "resolve", tier: 0, desc: "Analyzes clips in your seq bin and intelligently sorts them into organized bins based on clip type and duration. Saves 10+ minutes of manual dragging on complex timelines." },
+  { id: "create-project", name: "Create Project Folder", cat: "file", tier: 0, desc: "Creates your standardized project folder structure (Project Files, Documents, Exports, Resources) with a markdown note. Keeps every project consistent and findable." },
+  { id: "move-downloads", name: "Move Downloads to Finder", cat: "file", tier: 0, desc: "Moves files from your Downloads folder to the active Finder window with smart auto-routing based on file type. A micro-task you'd do dozens of times daily." },
+  { id: "quick-export", name: "Quick Export", cat: "render", tier: 0, desc: "Switches to Deliver, loads your '06 quick export' preset, clears the queue, and starts rendering with a retry loop for NAS lag. Fast preview renders for client checks." },
+  { id: "transcribe-footage", name: "Transcribe Footage", cat: "audio", tier: 0, desc: "Extracts audio from video files, transcribes using Groq, Gemini, or local Whisper, then analyzes the transcript with Claude. Full AI-powered transcription pipeline from video." },
+
+  // Tier A — High Value
+  { id: "list-offline", name: "List Offline Files", cat: "resolve", tier: 1, desc: "Scans your current DaVinci Resolve timeline and lists all offline or missing media files. Catches missing footage before a render saves you from wasted time and deadline panic." },
+  { id: "sync-github", name: "Sync Scripts to GitHub", cat: "system", tier: 1, desc: "One-click git commit and push of your entire raycast-scripts repo. Instant backup of your automation toolkit — insurance you'd regret not having." },
+  { id: "copy-frameio", name: "Copy to Frame.io Watch", cat: "file", tier: 1, desc: "Copies a Finder-selected file to the Frame.io watch folder with automatic versioning. Streamlines the client review upload loop without manual file management." },
+  { id: "transcribe-audio", name: "Transcribe Audio", cat: "audio", tier: 1, desc: "Transcribes selected audio files to text using Whisper with preprocessing and the small model. Reliable standalone transcription for interviews, VO, and music." },
+  { id: "compress-master", name: "Compress Master Render", cat: "render", tier: 1, desc: "Takes your selected master render and creates a ~40MB 1080p compressed copy using ffmpeg with H.264, lanczos scaling, and faststart. Quick shareable version without re-rendering from Resolve." },
+  { id: "fusion-batch", name: "Fusion Batch Render", cat: "fusion", tier: 1, desc: "Sets all Fusion compositions to 4K ProRes 4444 and batch renders everything. Eliminates manual babysitting of individual Fusion comp renders." },
+  { id: "render-hires", name: "Render Hi-Res TV Export", cat: "render", tier: 1, desc: "Renders the current timeline with your high-resolution TV Export preset for when standard delivery isn't enough. Specialized hi-res output path." },
+  { id: "launch-yolo", name: "Launch Claude YOLO", cat: "ai", tier: 1, desc: "Opens Ghostty terminal and launches Claude Code with --dangerously-skip-permissions for unrestricted AI coding. Your quick-access power mode for scripting sessions." },
+  { id: "quit-prod", name: "Quit Production Apps", cat: "system", tier: 1, desc: "Cleanly quits all video production applications with project saving. Prevents data loss at end of day and frees up system resources." },
+  { id: "update-system", name: "Update System", cat: "system", tier: 1, desc: "Runs Homebrew update, upgrades all packages and casks, and cleans up in one shot. Keeps your entire tool ecosystem current without manual hunting." },
+
+  // Tier B — Solid Utility
+  { id: "batch-rename", name: "Batch Rename Timelines", cat: "resolve", tier: 2, desc: "Find and replace across all timeline names in your DaVinci Resolve project. Niche but when you need to rename 20 timelines, doing it by hand is brutal." },
+  { id: "split-interviews", name: "Split Interviews to Timelines", cat: "resolve", tier: 2, desc: "Duplicates the current timeline for each clip on the Audio Track 'MX', creating individual interview timelines. Smart isolation that saves real editorial setup time." },
+  { id: "analyze-gaps", name: "Analyze Timeline Gaps", cat: "resolve", tier: 2, desc: "Finds and analyzes gaps between clips in your current Resolve timeline. A QC tool that catches mistakes before they become client-facing problems." },
+  { id: "fusion-render-comp", name: "Fusion Render Comp", cat: "fusion", tier: 2, desc: "Renders the currently active Fusion composition as 4K ProRes 4444. Single-comp rendering for quick iterations when you don't need a full batch." },
+  { id: "fusion-pipeline", name: "Fusion Pipeline", cat: "fusion", tier: 2, desc: "Exports Fusion compositions from Resolve, opens them in Fusion standalone, and renders as 4K ProRes. Full roundtrip pipeline between the two apps." },
+  { id: "yt-audio", name: "Download YouTube Audio", cat: "media", tier: 2, desc: "Downloads audio from a YouTube video as MP3 using yt-dlp. Quick reference audio pulls for music, sound design, or research." },
+  { id: "img-svg-png", name: "Image to SVG to 4K PNG", cat: "image", tier: 2, desc: "Traces a raster image to a black-and-white SVG, then renders it as a 4K PNG with transparent background. Two-step pipeline for clean title and lower third graphics." },
+  { id: "upscale", name: "Upscale Image (4x)", cat: "image", tier: 2, desc: "Upscales an image to 4x resolution using Real-ESRGAN AI. Rescues the low-res assets that clients inevitably send you." },
+  { id: "toggle-dnd", name: "Toggle DND", cat: "system", tier: 2, desc: "Toggles Do Not Disturb to block all notification banners. Focus protection during editing sessions — small action, meaningful impact." },
+  { id: "speak-kokoro", name: "Speak with Kokoro", cat: "ai", tier: 2, desc: "Toggles speaking selected or clipboard text using the Kokoro TTS daemon, or stops current speech. Hands-free script proofreading and accessibility." },
+  { id: "claude-filebot", name: "Claude Code File Bot", cat: "ai", tier: 2, desc: "Runs Claude Code against a Finder-selected file with a custom prompt. Flexible AI processing on any individual file." },
+  { id: "copy-pdf", name: "Copy PDF Text", cat: "file", tier: 2, desc: "Extracts all text from a selected PDF and copies it to your clipboard. Quick text grab from client briefs, scripts, and contracts." },
+  { id: "camera-info", name: "Get Camera Info", cat: "special", tier: 2, desc: "Extracts camera model and log/gamma profile information from video file metadata. Essential for matching footage across multiple cameras on a shoot." },
+  { id: "kill-ai", name: "Kill AI Processes", cat: "system", tier: 2, desc: "Kills orphaned Claude Code and OpenCode subprocesses that accumulate over time. Prevents background AI processes from slowly eating your system resources." },
+
+  // Tier C — Specialized
+  { id: "transcribe-compare", name: "Transcribe & Compare Script", cat: "audio", tier: 3, desc: "Transcribes audio and compares the transcript against an original script document. Invaluable for compliance checks and verifying delivered content matches the approved script." },
+  { id: "foolcat-report", name: "Foolcat Video Report", cat: "special", tier: 3, desc: "Generates a contact sheet PDF for video files with optional LUT application. Visual thumbnails for client deliverables, archival, or quick content review." },
+  { id: "hulu-spec", name: "Convert to Hulu Spec", cat: "render", tier: 3, desc: "Converts video to Hulu/NBCU broadcast spec — ProRes 422 HQ at 29.97fps with DF30 timecode. Low frequency but zero margin for error on broadcast delivery." },
+  { id: "clone-voice", name: "Clone Voice", cat: "ai", tier: 3, desc: "Clones a voice from reference audio and generates speech using Qwen3 Pro or Chatterbox. Creative voice synthesis for projects that need custom VO." },
+  { id: "arena-add", name: "Are.na Add", cat: "special", tier: 3, desc: "Adds clipboard content — text, URL, file, image, PDF, or GIF — to an Are.na channel. Long-term knowledge archiving and visual bookmarking." },
+  { id: "twitter-dl", name: "Download Twitter Media", cat: "media", tier: 3, desc: "Downloads GIF or video from a Twitter/X URL. Grabs social media content for reference material or b-roll." },
+  { id: "fusion-batch-key", name: "Fusion Batch Key", cat: "fusion", tier: 3, desc: "Keys selected green screen .mov files through an open Fusion composition in batch. Very specific to chroma key shoot types but huge time saver when needed." },
+  { id: "split-svg", name: "Split SVG Graphics", cat: "image", tier: 3, desc: "Auto-detects groups in an SVG file and exports each as a separate transparent 4K PNG. Motion graphics prep for layered animations in Resolve or After Effects." },
+  { id: "convert-ai", name: "Convert AI to PNG", cat: "image", tier: 3, desc: "Converts Adobe Illustrator files to 1200 DPI PNG. For when designers send you .ai files and you need high-res rasters." },
+  { id: "epub-pdf", name: "EPUB to PDF", cat: "special", tier: 3, desc: "Converts selected .epub files to PDF format. Simple format conversion for reading material or documentation." },
+  { id: "strflow-audit", name: "StrFlow Audit", cat: "ai", tier: 3, desc: "Exports recent StrFlow notes and runs a knowledge audit with Claude. Long-term organizational value for reviewing your accumulated notes and insights." },
+  { id: "invert-colors", name: "Invert Video Colors", cat: "image", tier: 3, desc: "Inverts all colors in a video file using FFmpeg. Niche creative effect for stylized looks or negative processing." },
+  { id: "open-book", name: "Open Book", cat: "special", tier: 3, desc: "Picks an epub from your Books folder and opens it in the epy terminal reader. Personal enrichment tool — not production, but good for you." },
+
+  // Tier D — Support & Infrastructure
+  { id: "yt-playlist", name: "Download YT Playlist Audio", cat: "media", tier: 4, desc: "Downloads all videos from a YouTube playlist as MP3 files. Rare but massive time savings when you need an entire playlist for reference or music." },
+  { id: "toggle-sketchybar", name: "Toggle SketchyBar", cat: "system", tier: 4, desc: "Toggles the SketchyBar custom status bar on and off. UI preference toggle with minimal direct efficiency impact." },
+  { id: "start-break", name: "Start Break", cat: "system", tier: 4, desc: "Clicks 'Start this break now' in the LookAway menu bar app. Important for your health and eyes, even if it doesn't speed up production." },
+  { id: "hammer-quick", name: "Quick Export (Hammer)", cat: "render", tier: 4, desc: "Shortcat UI automation fallback for Quick Export — types keyboard shortcuts to navigate menus. Backup path when the Resolve API version isn't suitable." },
+  { id: "cleanup-frameio", name: "Cleanup Frame.io Watch", cat: "file", tier: 4, desc: "Deletes files older than 7 days from the Frame.io watch folder. Housekeeping script that prevents your watch folder from growing endlessly." },
+  { id: "toggle-hours", name: "Toggle Hours Scheduler", cat: "system", tier: 4, desc: "Enables or disables the hourly Dayflow hours logging LaunchAgent from 9:30am to 4:30pm. Time tracking infrastructure toggle." },
+  { id: "toggle-autobins", name: "Toggle Auto Bins", cat: "resolve", tier: 4, desc: "Toggles the automatic bin creator LaunchAgent on and off. Background service control for your DaVinci Resolve bin automation." },
+  { id: "stop-offload", name: "Stop Offload", cat: "file", tier: 4, desc: "Kills the offload script and all rsync processes. Emergency stop when you need to cancel a media offload in progress." },
+  { id: "restart-kokoro", name: "Restart Kokoro", cat: "ai", tier: 4, desc: "Restarts the Kokoro TTS daemon when it stops responding. Support script for the Speak with Kokoro tool." },
+  { id: "close-sidebars", name: "Close Sidebars", cat: "system", tier: 4, desc: "Presses bracket keys to close sidebars in reading apps. Tiny ergonomic shortcut for distraction-free reading." },
+  { id: "quick-search", name: "Quick Search", cat: "system", tier: 4, desc: "Google searches your selected or clipboard text. Simple but surprisingly handy for quick lookups mid-edit." },
+  { id: "comma-tasks", name: "Comma to Tasks", cat: "special", tier: 4, desc: "Converts comma-separated text into a markdown task list. Text formatting utility for quick task creation." },
+  { id: "go-project-note", name: "Go to Project Note", cat: "file", tier: 4, desc: "Opens Finder navigated to the current project's markdown note in 02 Documents. Quick navigation companion to Create Project Folder." },
+  { id: "launch-talking", name: "Launch Claude Talking", cat: "ai", tier: 4, desc: "Launches Claude Code in talking mode with Kokoro TTS enabled. Voice-interactive AI coding sessions." },
+  { id: "convert-svg", name: "Convert Image to SVG", cat: "image", tier: 4, desc: "Converts a raster image to SVG format using Inkscape's trace function. Standalone vectorization step." },
+  { id: "svg-to-png", name: "Convert SVG to 4K PNG", cat: "image", tier: 4, desc: "Renders an SVG file as a 4K PNG with transparent background. The second half of the Image to SVG to 4K pipeline, usable standalone." },
+  { id: "dump-downloads", name: "Dump Downloads to Finder", cat: "file", tier: 4, desc: "Moves ALL files from Downloads to the current Finder window at once. Bulk version of Move Downloads when you want everything moved." },
+  { id: "video-review", name: "Start Video Review", cat: "special", tier: 4, desc: "Launches the video-review app pointed at the current Finder folder. Quick visual review of rendered footage." },
+  { id: "dl-obsidian", name: "Download Obsidian Videos", cat: "media", tier: 4, desc: "Batch downloads missing Sound Sanctuary Obsidian Series videos as MP3 from YouTube. Very specific content series downloader." },
+  { id: "process-car", name: "Process Batch Car Video", cat: "special", tier: 4, desc: "Scans a project folder and builds a DaVinci Resolve timeline for car videos. Specialized batch ingest for a specific project type." },
+];
+
+const TIERS = [
+  { label: "S", cls: "tier-s" },
+  { label: "A", cls: "tier-a" },
+  { label: "B", cls: "tier-b" },
+  { label: "C", cls: "tier-c" },
+  { label: "D", cls: "tier-d" },
+];
+
+const container = document.getElementById('tierContainer');
+const infoPanel = document.getElementById('infoPanel');
+const infoTitle = document.getElementById('infoTitle');
+const infoDesc = document.getElementById('infoDesc');
+const infoCat = document.getElementById('infoCat');
+const dragGhost = document.getElementById('dragGhost');
+
+// Build tier rows
+const tierItemsEls = [];
+TIERS.forEach((tier, i) => {
+  const row = document.createElement('div');
+  row.className = `tier-row ${tier.cls}`;
+  row.innerHTML = `<div class="tier-label">${tier.label}</div>`;
+  const items = document.createElement('div');
+  items.className = 'tier-items';
+  items.dataset.tier = i;
+  row.appendChild(items);
+  container.appendChild(row);
+  tierItemsEls.push(items);
+});
+
+// Category labels
+const CAT_LABELS = {
+  resolve: "DaVinci Resolve", render: "Rendering", audio: "Audio & Transcription",
+  media: "Media Download", image: "Image & Graphics", file: "File Management",
+  system: "System Utility", ai: "AI & Claude", fusion: "Fusion", special: "Specialized"
+};
+
+// Create script blocks
+SCRIPTS.forEach(s => {
+  const el = document.createElement('div');
+  el.className = `script-block cat-${s.cat}`;
+  el.textContent = s.name;
+  el.dataset.id = s.id;
+  tierItemsEls[s.tier].appendChild(el);
+});
+
+// --- Info panel ---
+let selectedId = null;
+
+function showInfo(id) {
+  const s = SCRIPTS.find(x => x.id === id);
+  if (!s) return;
+  selectedId = id;
+  infoTitle.textContent = s.name;
+  infoDesc.textContent = s.desc;
+  infoCat.textContent = CAT_LABELS[s.cat] || s.cat;
+  infoPanel.classList.add('visible');
+  document.querySelectorAll('.script-block.selected').forEach(el => el.classList.remove('selected'));
+  const block = document.querySelector(`.script-block[data-id="${id}"]`);
+  if (block) block.classList.add('selected');
+}
+
+function hideInfo() {
+  infoPanel.classList.remove('visible');
+  selectedId = null;
+  document.querySelectorAll('.script-block.selected').forEach(el => el.classList.remove('selected'));
+}
+
+document.getElementById('infoClose').addEventListener('click', hideInfo);
+
+// --- Drag and Drop (pointer events for mouse + touch) ---
+let dragEl = null;
+let dragStartX = 0, dragStartY = 0;
+let hasMoved = false;
+let currentOverTier = null;
+const MOVE_THRESHOLD = 8;
+
+function getBlockAt(x, y, ignore) {
+  const els = document.elementsFromPoint(x, y);
+  return els.find(el => el.classList.contains('script-block') && el !== ignore) || null;
+}
+
+function getTierAt(x, y) {
+  const els = document.elementsFromPoint(x, y);
+  return els.find(el => el.classList.contains('tier-items')) || null;
+}
+
+function onPointerDown(e) {
+  const block = e.target.closest('.script-block');
+  if (!block) return;
+
+  dragEl = block;
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
+  hasMoved = false;
+
+  document.addEventListener('pointermove', onPointerMove);
+  document.addEventListener('pointerup', onPointerUp);
+  document.addEventListener('pointercancel', onPointerUp);
+}
+
+function onPointerMove(e) {
+  if (!dragEl) return;
+
+  const dx = e.clientX - dragStartX;
+  const dy = e.clientY - dragStartY;
+
+  if (!hasMoved) {
+    if (Math.abs(dx) < MOVE_THRESHOLD && Math.abs(dy) < MOVE_THRESHOLD) return;
+    hasMoved = true;
+    dragEl.classList.add('dragging');
+    dragGhost.textContent = dragEl.textContent;
+    dragGhost.className = `drag-ghost ${dragEl.className.split(' ').find(c => c.startsWith('cat-')) || ''}`;
+    dragGhost.style.display = 'block';
+  }
+
+  dragGhost.style.left = e.clientX + 'px';
+  dragGhost.style.top = e.clientY + 'px';
+
+  const tier = getTierAt(e.clientX, e.clientY);
+  if (tier !== currentOverTier) {
+    if (currentOverTier) currentOverTier.classList.remove('drag-over');
+    currentOverTier = tier;
+    if (tier) tier.classList.add('drag-over');
+  }
+}
+
+function onPointerUp(e) {
+  document.removeEventListener('pointermove', onPointerMove);
+  document.removeEventListener('pointerup', onPointerUp);
+  document.removeEventListener('pointercancel', onPointerUp);
+
+  if (!dragEl) return;
+
+  if (!hasMoved) {
+    // It was a tap/click
+    showInfo(dragEl.dataset.id);
+    dragEl = null;
+    return;
+  }
+
+  dragEl.classList.remove('dragging');
+  dragGhost.style.display = 'none';
+
+  if (currentOverTier) {
+    currentOverTier.classList.remove('drag-over');
+    // Insert at position
+    const target = getBlockAt(e.clientX, e.clientY, dragEl);
+    if (target && target.parentElement === currentOverTier) {
+      const targetRect = target.getBoundingClientRect();
+      const after = e.clientX > targetRect.left + targetRect.width / 2;
+      if (after) {
+        target.after(dragEl);
+      } else {
+        target.before(dragEl);
+      }
+    } else {
+      currentOverTier.appendChild(dragEl);
+    }
+  }
+
+  dragEl = null;
+  currentOverTier = null;
+}
+
+container.addEventListener('pointerdown', onPointerDown);
+
+// Prevent context menu on long press (mobile)
+container.addEventListener('contextmenu', e => {
+  if (e.target.closest('.script-block')) e.preventDefault();
+});
+
+// Close info panel on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') hideInfo();
+});
+</script>
+
+</body>
+</html>
